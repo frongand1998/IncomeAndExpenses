@@ -1,2 +1,0 @@
-# IncomeAndExpenses
-Income and expenses
