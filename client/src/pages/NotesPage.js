@@ -74,6 +74,7 @@ function NotesPage() {
               padding: "8px",
               width: "300px",
               height: "60px",
+              minHeight: "60px",
             }}
           />
           <button type="submit" disabled={loading}>
