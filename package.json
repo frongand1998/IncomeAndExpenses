@@ -1,0 +1,40 @@
+{
+  "name": "income-expenses-tracker",
+  "version": "1.0.0",
+  "description": "A full-stack MERN application for tracking personal income and expenses",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "cd server && npm start",
+    "dev": "concurrently \"cd server && npm run dev\" \"cd client && npm start\"",
+    "build": "cd client && npm run build",
+    "install-deps": "cd server && npm install && cd ../client && npm install",
+    "heroku-postbuild": "cd client && npm install && npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/frongand1998/IncomeAndExpenses.git"
+  },
+  "keywords": [
+    "expense-tracker",
+    "income-tracker",
+    "personal-finance",
+    "mern-stack",
+    "react",
+    "mongodb",
+    "express",
+    "nodejs"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/frongand1998/IncomeAndExpenses/issues"
+  },
+  "homepage": "https://github.com/frongand1998/IncomeAndExpenses#readme",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

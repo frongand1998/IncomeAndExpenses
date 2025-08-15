@@ -170,7 +170,11 @@ function IncomeExpensesPage() {
 
   const balance = totalIncome - totalExpenses;
 
-  const hasActiveFilters = dateFilter.fromDate || dateFilter.toDate || filters.description || filters.type !== "all";
+  const hasActiveFilters =
+    dateFilter.fromDate ||
+    dateFilter.toDate ||
+    filters.description ||
+    filters.type !== "all";
 
   const clearAllFilters = () => {
     setDateFilter({ fromDate: "", toDate: "", preset: "all" });
@@ -181,8 +185,12 @@ function IncomeExpensesPage() {
     <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">💰 Income & Expenses</h1>
-        <p className="text-gray-600 text-sm sm:text-base">Track your financial transactions</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+          💰 Income & Expenses
+        </h1>
+        <p className="text-gray-600 text-sm sm:text-base">
+          Track your financial transactions
+        </p>
       </div>
 
       {/* Summary Cards */}
@@ -191,32 +199,56 @@ function IncomeExpensesPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-green-600 text-sm font-medium">Income</p>
-              <p className="text-xl sm:text-2xl font-bold text-green-700">{formatCurrency(totalIncome)}</p>
+              <p className="text-xl sm:text-2xl font-bold text-green-700">
+                {formatCurrency(totalIncome)}
+              </p>
             </div>
             <div className="text-green-500 text-2xl">💰</div>
           </div>
         </div>
-        
+
         <div className="bg-red-50 border border-red-200 rounded-xl p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-red-600 text-sm font-medium">Expenses</p>
-              <p className="text-xl sm:text-2xl font-bold text-red-700">{formatCurrency(totalExpenses)}</p>
+              <p className="text-xl sm:text-2xl font-bold text-red-700">
+                {formatCurrency(totalExpenses)}
+              </p>
             </div>
             <div className="text-red-500 text-2xl">💸</div>
           </div>
         </div>
-        
-        <div className={`${balance >= 0 ? 'bg-blue-50 border-blue-200' : 'bg-orange-50 border-orange-200'} border rounded-xl p-4`}>
+
+        <div
+          className={`${
+            balance >= 0
+              ? "bg-blue-50 border-blue-200"
+              : "bg-orange-50 border-orange-200"
+          } border rounded-xl p-4`}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <p className={`${balance >= 0 ? 'text-blue-600' : 'text-orange-600'} text-sm font-medium`}>Balance</p>
-              <p className={`text-xl sm:text-2xl font-bold ${balance >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>
+              <p
+                className={`${
+                  balance >= 0 ? "text-blue-600" : "text-orange-600"
+                } text-sm font-medium`}
+              >
+                Balance
+              </p>
+              <p
+                className={`text-xl sm:text-2xl font-bold ${
+                  balance >= 0 ? "text-blue-700" : "text-orange-700"
+                }`}
+              >
                 {formatCurrency(balance)}
               </p>
             </div>
-            <div className={`${balance >= 0 ? 'text-blue-500' : 'text-orange-500'} text-2xl`}>
-              {balance >= 0 ? '📈' : '📉'}
+            <div
+              className={`${
+                balance >= 0 ? "text-blue-500" : "text-orange-500"
+              } text-2xl`}
+            >
+              {balance >= 0 ? "📈" : "📉"}
             </div>
           </div>
         </div>
@@ -230,20 +262,33 @@ function IncomeExpensesPage() {
         >
           <span className="font-medium text-gray-700">🔍 Filters & Search</span>
           <svg
-            className={`w-5 h-5 text-gray-500 transform transition-transform ${showFilters ? 'rotate-180' : ''}`}
+            className={`w-5 h-5 text-gray-500 transform transition-transform ${
+              showFilters ? "rotate-180" : ""
+            }`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+              d="M19 9l-7 7-7-7"
+            />
           </svg>
         </button>
       </div>
 
       {/* Filters Section */}
-      <div className={`bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-6 ${showFilters ? 'block' : 'hidden sm:block'}`}>
+      <div
+        className={`bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-6 ${
+          showFilters ? "block" : "hidden sm:block"
+        }`}
+      >
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">🔍 Filters & Search</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            🔍 Filters & Search
+          </h2>
           {hasActiveFilters && (
             <button
               onClick={clearAllFilters}
@@ -256,7 +301,9 @@ function IncomeExpensesPage() {
 
         {/* Date Filter Presets */}
         <div className="mb-4">
-          <p className="text-sm font-medium text-gray-700 mb-2">📅 Quick Date Filters</p>
+          <p className="text-sm font-medium text-gray-700 mb-2">
+            📅 Quick Date Filters
+          </p>
           <div className="flex flex-wrap gap-2">
             {["all", "today", "week", "month", "year"].map((preset) => (
               <button
@@ -277,7 +324,9 @@ function IncomeExpensesPage() {
         {/* Custom Date Range & Search */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              From Date
+            </label>
             <input
               type="date"
               value={dateFilter.fromDate}
@@ -291,9 +340,11 @@ function IncomeExpensesPage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
             />
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              To Date
+            </label>
             <input
               type="date"
               value={dateFilter.toDate}
@@ -307,9 +358,11 @@ function IncomeExpensesPage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
             />
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Search Description</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Search Description
+            </label>
             <input
               type="text"
               value={filters.description}
@@ -323,9 +376,11 @@ function IncomeExpensesPage() {
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
             />
           </div>
-          
+
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Type
+            </label>
             <select
               value={filters.type}
               onChange={(e) =>
@@ -344,11 +399,18 @@ function IncomeExpensesPage() {
         {hasActiveFilters && (
           <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-700">
-              <strong>Showing {filteredRecords.length} of {records.length} records</strong>
-              {dateFilter.fromDate && ` • From ${dayjs(dateFilter.fromDate).format("MMM DD, YYYY")}`}
-              {dateFilter.toDate && ` • To ${dayjs(dateFilter.toDate).format("MMM DD, YYYY")}`}
+              <strong>
+                Showing {filteredRecords.length} of {records.length} records
+              </strong>
+              {dateFilter.fromDate &&
+                ` • From ${dayjs(dateFilter.fromDate).format("MMM DD, YYYY")}`}
+              {dateFilter.toDate &&
+                ` • To ${dayjs(dateFilter.toDate).format("MMM DD, YYYY")}`}
               {filters.description && ` • Contains "${filters.description}"`}
-              {filters.type !== "all" && ` • Type: ${filters.type === "income" ? "💰 Income" : "💸 Expenses"}`}
+              {filters.type !== "all" &&
+                ` • Type: ${
+                  filters.type === "income" ? "💰 Income" : "💸 Expenses"
+                }`}
             </p>
           </div>
         )}
@@ -356,13 +418,17 @@ function IncomeExpensesPage() {
 
       {/* Add Record Form */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">➕ Add New Record</h2>
-        
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          ➕ Add New Record
+        </h2>
+
         <form onSubmit={addRecord} className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Type Selection */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Type
+              </label>
               <select
                 value={newRecord.type}
                 onChange={(e) =>
@@ -377,7 +443,9 @@ function IncomeExpensesPage() {
 
             {/* Amount Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Amount
+              </label>
               <input
                 type="number"
                 step="0.01"
@@ -393,7 +461,9 @@ function IncomeExpensesPage() {
 
             {/* Date Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Date
+              </label>
               <div className="flex gap-2">
                 <input
                   type="date"
@@ -422,7 +492,9 @@ function IncomeExpensesPage() {
 
             {/* Description Input */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Description
+              </label>
               <input
                 type="text"
                 value={newRecord.description}
@@ -440,7 +512,9 @@ function IncomeExpensesPage() {
           <div className="flex justify-end pt-4">
             <button
               type="submit"
-              disabled={loading || !newRecord.amount || !newRecord.description.trim()}
+              disabled={
+                loading || !newRecord.amount || !newRecord.description.trim()
+              }
               className="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-base min-h-[48px] touch-manipulation"
             >
               {loading ? (
@@ -462,8 +536,8 @@ function IncomeExpensesPage() {
           <div
             key={record._id}
             className={`bg-white rounded-lg border-l-4 shadow-sm p-4 ${
-              record.type === "income" 
-                ? "border-l-green-500 hover:bg-green-50" 
+              record.type === "income"
+                ? "border-l-green-500 hover:bg-green-50"
                 : "border-l-red-500 hover:bg-red-50"
             } transition-colors`}
           >
@@ -499,8 +573,18 @@ function IncomeExpensesPage() {
                   className="p-2 text-red-600 hover:text-red-700 hover:bg-red-100 rounded-lg transition-colors focus:ring-2 focus:ring-red-500 focus:ring-offset-2 touch-manipulation"
                   aria-label="Delete record"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
                   </svg>
                 </button>
               </div>
@@ -512,8 +596,12 @@ function IncomeExpensesPage() {
         {filteredRecords.length === 0 && records.length > 0 && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No records match your filters</h3>
-            <p className="text-gray-600 text-sm mb-4">Try adjusting your search criteria</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No records match your filters
+            </h3>
+            <p className="text-gray-600 text-sm mb-4">
+              Try adjusting your search criteria
+            </p>
             <button
               onClick={clearAllFilters}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors touch-manipulation"
@@ -526,8 +614,12 @@ function IncomeExpensesPage() {
         {records.length === 0 && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">💰</div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No records yet</h3>
-            <p className="text-gray-600 text-sm">Add your first income or expense above to get started!</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No records yet
+            </h3>
+            <p className="text-gray-600 text-sm">
+              Add your first income or expense above to get started!
+            </p>
           </div>
         )}
       </div>
