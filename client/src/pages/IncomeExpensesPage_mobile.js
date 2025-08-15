@@ -26,7 +26,7 @@ function IncomeExpensesPage() {
   const [showFilters, setShowFilters] = useState(false);
   const { formatCurrency } = useCurrency();
 
-  const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:3001";
+  const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
   // Date filter helper functions
   const getDatePresets = () => {

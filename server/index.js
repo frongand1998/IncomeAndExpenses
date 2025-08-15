@@ -6,15 +6,27 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CORS configuration for production
+// CORS configuration (dev + prod)
+// In production, set FRONTEND_ORIGIN to your deployed frontend URL (e.g., https://your-app.vercel.app)
+const allowedDevOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "http://localhost:3002",
+];
+const prodOrigin = process.env.FRONTEND_ORIGIN
+  ? process.env.FRONTEND_ORIGIN.split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+  : [];
 const corsOptions = {
-  origin:
-    process.env.NODE_ENV === "production"
-      ? [
-          "https://your-frontend-url.vercel.app",
-          "https://your-custom-domain.com",
-        ]
-      : ["http://localhost:3002", "http://localhost:3001"],
+  origin: (origin, callback) => {
+    const isDev = process.env.NODE_ENV !== "production";
+    const whitelist = isDev ? allowedDevOrigins : prodOrigin;
+    // Allow server-to-server or tools without Origin header
+    if (!origin) return callback(null, true);
+    if (whitelist.includes(origin)) return callback(null, true);
+    return callback(new Error(`CORS blocked: ${origin} not in whitelist`));
+  },
   credentials: true,
   optionsSuccessStatus: 200,
 };
