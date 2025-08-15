@@ -5,6 +5,9 @@ const userSchema = new mongoose.Schema(
     username: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     email: { type: String, required: true, unique: true },
+    // Password reset fields
+    resetToken: { type: String, default: null },
+    resetTokenExpires: { type: Date, default: null },
     settings: {
       currency: { type: String, default: "USD" },
       currencySymbol: { type: String, default: "$" },

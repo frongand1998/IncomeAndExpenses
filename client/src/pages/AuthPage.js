@@ -3,6 +3,8 @@ import React, { useState } from "react";
 function AuthPage({ onAuth }) {
   const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:3000";
   const [isLogin, setIsLogin] = useState(true);
+  const [isForgot, setIsForgot] = useState(false);
+  const [resetToken, setResetToken] = useState("");
   const [form, setForm] = useState({ username: "", password: "", email: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -50,6 +52,54 @@ function AuthPage({ onAuth }) {
     setForm({ username: "", password: "", email: "" });
   };
 
+  const handleForgot = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/users/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: form.email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to request reset");
+      setIsForgot(false);
+      setResetToken(data.token || "");
+      if (!data.token) {
+        // when email not found we still show generic success
+        setError("");
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReset = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/users/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: resetToken, password: form.password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to reset password");
+      // After successful reset, return to login
+      setIsLogin(true);
+      setIsForgot(false);
+      setError("");
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
       {/* Background decoration */}
@@ -77,120 +127,223 @@ function AuthPage({ onAuth }) {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Username field */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">
-                Username
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-gray-400">👤</span>
-                </div>
-                <input
-                  name="username"
-                  type="text"
-                  placeholder="Enter your username"
-                  value={form.username}
-                  onChange={handleChange}
-                  required
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
-                />
-              </div>
-            </div>
-
-            {/* Email field (register only) */}
-            {!isLogin && (
+          {!isForgot && (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Username field */}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">
-                  Email
+                  Username
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span className="text-gray-400">📧</span>
+                    <span className="text-gray-400">👤</span>
                   </div>
                   <input
-                    name="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={form.email}
+                    name="username"
+                    type="text"
+                    placeholder="Enter your username"
+                    value={form.username}
                     onChange={handleChange}
                     required
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
                   />
                 </div>
               </div>
-            )}
 
-            {/* Password field */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">
-                Password
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-gray-400">🔒</span>
+              {/* Email field (register only) */}
+              {!isLogin && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Email
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-gray-400">📧</span>
+                    </div>
+                    <input
+                      name="email"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={form.email}
+                      onChange={handleChange}
+                      required
+                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                    />
+                  </div>
                 </div>
-                <input
-                  name="password"
-                  type="password"
-                  placeholder="Enter your password"
-                  value={form.password}
-                  onChange={handleChange}
-                  required
-                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
-                />
-              </div>
-            </div>
+              )}
 
-            {/* Error message */}
-            {error && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center space-x-2">
-                <span className="text-red-500">⚠️</span>
-                <span className="text-red-700 text-sm">{error}</span>
-              </div>
-            )}
-
-            {/* Submit button */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-            >
-              {loading ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>
-                    {isLogin ? "Signing in..." : "Creating account..."}
-                  </span>
+              {/* Password field */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">
+                  Password
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-400">🔒</span>
+                  </div>
+                  <input
+                    name="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    value={form.password}
+                    onChange={handleChange}
+                    required
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                  />
                 </div>
-              ) : (
-                <span>{isLogin ? "Sign In" : "Create Account"}</span>
-              )}
-            </button>
-          </form>
+              </div>
 
-          {/* Toggle between login/register */}
-          <div className="mt-8 text-center">
-            <button
-              onClick={toggleMode}
-              className="text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm"
+              {/* Error message */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center space-x-2">
+                  <span className="text-red-500">⚠️</span>
+                  <span className="text-red-700 text-sm">{error}</span>
+                </div>
+              )}
+
+              {/* Submit button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>
+                      {isLogin ? "Signing in..." : "Creating account..."}
+                    </span>
+                  </div>
+                ) : (
+                  <span>{isLogin ? "Sign In" : "Create Account"}</span>
+                )}
+              </button>
+            </form>
+          )}
+
+          {isForgot && (
+            <form
+              onSubmit={resetToken ? handleReset : handleForgot}
+              className="space-y-6"
             >
-              {isLogin ? (
+              {/* Email (request token) */}
+              {!resetToken && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700">
+                    Email
+                  </label>
+                  <input
+                    name="email"
+                    type="email"
+                    placeholder="Enter your account email"
+                    value={form.email}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white/50"
+                  />
+                  <p className="text-xs text-gray-500">
+                    We'll generate a temporary reset token (normally emailed).
+                  </p>
+                </div>
+              )}
+
+              {/* Token and new password (reset) */}
+              {resetToken && (
                 <>
-                  Don't have an account?{" "}
-                  <span className="font-semibold text-blue-600 hover:text-blue-700">
-                    Sign up here
-                  </span>
-                </>
-              ) : (
-                <>
-                  Already have an account?{" "}
-                  <span className="font-semibold text-blue-600 hover:text-blue-700">
-                    Sign in here
-                  </span>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      Reset Token
+                    </label>
+                    <input
+                      name="resetToken"
+                      type="text"
+                      value={resetToken}
+                      onChange={(e) => setResetToken(e.target.value)}
+                      required
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white/50"
+                    />
+                    <p className="text-xs text-gray-500">
+                      Token expires in 15 minutes.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">
+                      New Password
+                    </label>
+                    <input
+                      name="password"
+                      type="password"
+                      placeholder="Enter a new password"
+                      value={form.password}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white/50"
+                    />
+                  </div>
                 </>
               )}
+
+              {/* Error message */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center space-x-2">
+                  <span className="text-red-500">⚠️</span>
+                  <span className="text-red-700 text-sm">{error}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading
+                  ? resetToken
+                    ? "Resetting..."
+                    : "Sending..."
+                  : resetToken
+                  ? "Reset Password"
+                  : "Send Reset Link"}
+              </button>
+            </form>
+          )}
+
+          {/* Toggle between login/register/forgot */}
+          <div className="mt-8 text-center space-y-2">
+            {!isForgot && (
+              <button
+                onClick={toggleMode}
+                className="block w-full text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm"
+              >
+                {isLogin ? (
+                  <>
+                    Don't have an account?{" "}
+                    <span className="font-semibold text-blue-600 hover:text-blue-700">
+                      Sign up here
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    Already have an account?{" "}
+                    <span className="font-semibold text-blue-600 hover:text-blue-700">
+                      Sign in here
+                    </span>
+                  </>
+                )}
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setIsForgot(!isForgot);
+                setError("");
+                if (!isForgot) {
+                  setResetToken("");
+                  setForm({ username: "", password: "", email: "" });
+                }
+              }}
+              className="block w-full text-gray-600 hover:text-blue-600 transition-colors duration-200 text-sm"
+            >
+              {isForgot ? "Back to Sign in" : "Forgot password?"}
             </button>
           </div>
         </div>
