@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
 function AuthPage({ onAuth }) {
-  const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:3001";
+  const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:3000";
   const [isLogin, setIsLogin] = useState(true);
   const [form, setForm] = useState({ username: "", password: "", email: "" });
   const [error, setError] = useState("");

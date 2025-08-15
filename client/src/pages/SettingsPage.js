@@ -12,7 +12,7 @@ function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:3001";
+  const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
   const currencies = [
     { code: "USD", symbol: "$", name: "US Dollar" },
