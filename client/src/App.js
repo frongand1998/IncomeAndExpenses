@@ -10,6 +10,7 @@ import IncomeExpensesPage from "./pages/IncomeExpensesPage";
 import SettingsPage from "./pages/SettingsPage";
 import AuthPage from "./pages/AuthPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
+import Dev from "./pages/Dev";
 
 function AppContent() {
   const [user, setUser] = useRecoilState(userState);
@@ -164,12 +165,14 @@ function AppContent() {
               <Route path="/income-expenses" element={<IncomeExpensesPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/dev" element={<Dev />} />
               <Route path="/" element={<TodoPage />} />
             </Routes>
           ) : (
             <Routes>
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="*" element={<AuthPage onAuth={setUser} />} />
+              <Route path="/dev" element={<Dev />} />
             </Routes>
           )}
         </main>
