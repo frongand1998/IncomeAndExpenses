@@ -10,7 +10,7 @@ import IncomeExpensesPage from "./pages/IncomeExpensesPage";
 import SettingsPage from "./pages/SettingsPage";
 import AuthPage from "./pages/AuthPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
-import Dev from "./pages/Dev";
+import MyMap from "./pages/MyMap";
 
 function AppContent() {
   const [user, setUser] = useRecoilState(userState);
@@ -51,6 +51,12 @@ function AppContent() {
                     className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
                   >
                     📄 Notes
+                  </Link>{" "}
+                  <Link
+                    to="/my-map"
+                    className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    🗺️ My Map
                   </Link>
                   <Link
                     to="/income-expenses"
@@ -165,14 +171,14 @@ function AppContent() {
               <Route path="/income-expenses" element={<IncomeExpensesPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
-              <Route path="/dev" element={<Dev />} />
+              <Route path="/my-map" element={<MyMap />} />
               <Route path="/" element={<TodoPage />} />
             </Routes>
           ) : (
             <Routes>
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="*" element={<AuthPage onAuth={setUser} />} />
-              <Route path="/dev" element={<Dev />} />
+              {/* <Route path="/dev" element={<MyMap />} /> */}
             </Routes>
           )}
         </main>

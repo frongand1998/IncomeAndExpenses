@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 
-function Dev() {
+function MyMap() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -1324,4 +1324,4 @@ function Dev() {
   );
 }
 
-export default Dev;
+export default MyMap;
