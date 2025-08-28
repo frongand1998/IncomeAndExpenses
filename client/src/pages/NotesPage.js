@@ -7,6 +7,7 @@ function NotesPage() {
   const [notes, setNotes] = useRecoilState(notesState);
   const [newNote, setNewNote] = useState({ title: "", content: "" });
   const [loading, setLoading] = useState(false);
+  const [sortOrder, setSortOrder] = useState("desc"); // "desc" for newest first, "asc" for oldest first
 
   const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:3000";
 
@@ -50,6 +51,22 @@ function NotesPage() {
     } catch (err) {
       console.error("Error deleting note:", err);
     }
+  };
+
+  // Sort notes by createdAt
+  const sortedNotes = [...notes].sort((a, b) => {
+    const dateA = new Date(a.createdAt);
+    const dateB = new Date(b.createdAt);
+
+    if (sortOrder === "desc") {
+      return dateB - dateA; // Newest first
+    } else {
+      return dateA - dateB; // Oldest first
+    }
+  });
+
+  const toggleSortOrder = () => {
+    setSortOrder(sortOrder === "desc" ? "asc" : "desc");
   };
 
   return (
@@ -125,9 +142,41 @@ function NotesPage() {
         </form>
       </div>
 
+      {/* Notes Controls */}
+      {notes.length > 0 && (
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">
+            Your Notes ({notes.length})
+          </h2>
+          <button
+            onClick={toggleSortOrder}
+            className="flex items-center gap-2 px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d={
+                  sortOrder === "desc"
+                    ? "M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"
+                    : "M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4"
+                }
+              />
+            </svg>
+            {sortOrder === "desc" ? "Newest First" : "Oldest First"}
+          </button>
+        </div>
+      )}
+
       {/* Notes List */}
       <div className="space-y-4">
-        {notes?.map((note) => (
+        {sortedNotes?.map((note) => (
           <div
             key={note._id}
             className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 hover:shadow-md transition-shadow"
@@ -203,7 +252,8 @@ function NotesPage() {
       {notes.length > 0 && (
         <div className="mt-6 bg-gray-50 rounded-lg p-4">
           <div className="text-sm text-gray-600">
-            Total notes: {notes.length}
+            Total notes: {notes.length} • Sorted by:{" "}
+            {sortOrder === "desc" ? "Newest first" : "Oldest first"}
           </div>
         </div>
       )}
