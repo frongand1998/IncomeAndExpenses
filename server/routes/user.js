@@ -2,7 +2,9 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
 const { sendResetEmail } = require("../utils/email");
+const { generateToken, authenticateToken } = require("../middleware/auth");
 
 // Register
 router.post("/register", async (req, res) => {
@@ -13,9 +15,38 @@ router.post("/register", async (req, res) => {
         .status(400)
         .json({ error: "username, password and email are required" });
     }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({
+      $or: [{ username }, { email }],
+    });
+
+    if (existingUser) {
+      if (existingUser.username === username) {
+        return res.status(409).json({ error: "Username already exists" });
+      }
+      if (existingUser.email === email) {
+        return res.status(409).json({ error: "Email already exists" });
+      }
+    }
+
+    // Create new user (password will be hashed by pre-save middleware)
     const user = new User({ username, password, email });
     await user.save();
-    res.status(201).json(user);
+
+    // Generate JWT token
+    const token = generateToken(user._id);
+
+    res.status(201).json({
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        settings: user.settings,
+        createdAt: user.createdAt,
+      },
+      token,
+    });
   } catch (err) {
     console.error("Register error:", err);
     if (err && err.code === 11000) {
@@ -27,37 +58,112 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// Login (dummy, no JWT yet)
+// Login with JWT
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
-    const user = await User.findOne({ username, password });
-    if (!user) return res.status(401).json({ error: "Invalid credentials" });
-    res.json(user);
+
+    if (!username || !password) {
+      return res
+        .status(400)
+        .json({ error: "Username and password are required" });
+    }
+
+    // Find user by username
+    const user = await User.findOne({ username });
+    console.log("🔍 Login attempt for username:", username);
+    console.log("🔍 User found in database:", !!user);
+
+    if (!user) {
+      console.log("❌ User not found in database");
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    console.log(
+      "🔍 Stored password (first 10 chars):",
+      user.password.substring(0, 10)
+    );
+    console.log("🔍 Input password:", password);
+
+    // Check password
+    let isMatch = false;
+
+    // First try with bcrypt (new hashed passwords)
+    try {
+      isMatch = await user.comparePassword(password);
+      console.log("🔍 bcrypt comparison result:", isMatch);
+    } catch (err) {
+      console.log("🔍 bcrypt comparison failed, trying plain text...");
+      // If bcrypt fails, check if it's a plain text password (legacy)
+      if (user.password === password) {
+        // Found legacy plain text password, hash it and save
+        console.log("✅ Migrating legacy password for user:", username);
+        user.password = password; // This will trigger the pre-save hash
+        await user.save();
+        isMatch = true;
+      } else {
+        console.log("❌ Plain text password comparison also failed");
+      }
+    }
+
+    if (!isMatch) {
+      console.log("❌ Final password match result: false");
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    console.log("✅ Login successful for user:", username);
+
+    // Generate JWT token
+    const token = generateToken(user._id);
+
+    res.json({
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        settings: user.settings,
+        createdAt: user.createdAt,
+      },
+      token,
+    });
   } catch (err) {
     console.error("Login error:", err);
     res.status(400).json({ error: err.message || "Login failed" });
   }
 });
 
-// Get user settings
-router.get("/:userId/settings", async (req, res) => {
+// Get current user profile (protected route)
+router.get("/profile", authenticateToken, async (req, res) => {
   try {
-    const user = await User.findById(req.params.userId);
-    if (!user) return res.status(404).json({ error: "User not found" });
-    res.json(user.settings || { currency: "USD", currencySymbol: "$" });
+    res.json({
+      _id: req.user._id,
+      username: req.user.username,
+      email: req.user.email,
+      settings: req.user.settings,
+      createdAt: req.user.createdAt,
+    });
+  } catch (err) {
+    console.error("Get profile error:", err);
+    res.status(400).json({ error: err.message || "Failed to get profile" });
+  }
+});
+
+// Get user settings (protected route)
+router.get("/settings", authenticateToken, async (req, res) => {
+  try {
+    res.json(req.user.settings || { currency: "USD", currencySymbol: "$" });
   } catch (err) {
     console.error("Get settings error:", err);
     res.status(400).json({ error: err.message || "Failed to get settings" });
   }
 });
 
-// Update user settings
-router.put("/:userId/settings", async (req, res) => {
+// Update user settings (protected route)
+router.put("/settings", authenticateToken, async (req, res) => {
   try {
     const { currency, currencySymbol } = req.body;
     const user = await User.findByIdAndUpdate(
-      req.params.userId,
+      req.user._id,
       {
         $set: {
           "settings.currency": currency,
@@ -138,7 +244,8 @@ router.post("/reset-password", async (req, res) => {
     if (!user)
       return res.status(400).json({ error: "Invalid or expired token" });
 
-    user.password = password; // Note: passwords are plain-text in this app currently
+    // Password will be hashed by pre-save middleware
+    user.password = password;
     user.resetToken = null;
     user.resetTokenExpires = null;
     await user.save();
@@ -149,21 +256,23 @@ router.post("/reset-password", async (req, res) => {
   }
 });
 
-// Change password (authenticated by username+current password for now)
-router.post("/change-password", async (req, res) => {
+// Change password (protected route)
+router.post("/change-password", authenticateToken, async (req, res) => {
   try {
-    const { username, currentPassword, newPassword } = req.body;
-    if (!username || !currentPassword || !newPassword)
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword)
       return res
         .status(400)
-        .json({ error: "username, currentPassword, newPassword are required" });
+        .json({ error: "currentPassword and newPassword are required" });
 
-    const user = await User.findOne({ username, password: currentPassword });
-    if (!user)
+    // Verify current password
+    const isMatch = await req.user.comparePassword(currentPassword);
+    if (!isMatch)
       return res.status(401).json({ error: "Invalid current password" });
 
-    user.password = newPassword;
-    await user.save();
+    // Update password (will be hashed by pre-save middleware)
+    req.user.password = newPassword;
+    await req.user.save();
     return res.json({ message: "Password changed successfully" });
   } catch (err) {
     console.error("Change password error:", err);

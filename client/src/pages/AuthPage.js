@@ -1,6 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { authService } from "../utils/auth"; // Keep for password reset functionality
 
-function AuthPage({ onAuth }) {
+function AuthPage() {
+  const {
+    login,
+    register,
+    error: authError,
+    isLoading: authLoading,
+    clearError,
+  } = useAuth();
   const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:3000";
   const [isLogin, setIsLogin] = useState(true);
   const [isForgot, setIsForgot] = useState(false);
@@ -9,6 +18,12 @@ function AuthPage({ onAuth }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Clear errors when switching between modes
+  useEffect(() => {
+    clearError();
+    setError("");
+  }, [isLogin, clearError]);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -16,33 +31,24 @@ function AuthPage({ onAuth }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
-
-    const url = `${API_BASE}${
-      isLogin ? "/api/users/login" : "/api/users/register"
-    }`;
 
     try {
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-
-      let data;
-      try {
-        data = await res.json();
-      } catch (parseErr) {
-        const text = await res.text();
-        throw new Error(text || "Unexpected empty response from server");
+      let result;
+      if (isLogin) {
+        result = await login({
+          username: form.username,
+          password: form.password,
+        });
+      } else {
+        result = await register(form);
       }
 
-      if (!res.ok) throw new Error(data.error || "Unknown error");
-      onAuth(data);
+      if (!result.success) {
+        setError(result.error);
+      }
+      // If successful, the AuthProvider will handle the redirect
     } catch (err) {
       setError(err.message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -195,20 +201,22 @@ function AuthPage({ onAuth }) {
               </div>
 
               {/* Error message */}
-              {error && (
+              {(error || authError) && (
                 <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center space-x-2">
                   <span className="text-red-500">⚠️</span>
-                  <span className="text-red-700 text-sm">{error}</span>
+                  <span className="text-red-700 text-sm">
+                    {error || authError}
+                  </span>
                 </div>
               )}
 
               {/* Submit button */}
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || authLoading}
                 className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
-                {loading ? (
+                {loading || authLoading ? (
                   <div className="flex items-center justify-center space-x-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     <span>

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useRecoilState, useRecoilValue } from "recoil";
-import { userState, notesState } from "../state/atoms";
+import { useAuth } from "../contexts/AuthContext";
+import { authService } from "../utils/auth";
 
 function NotesPage() {
-  const user = useRecoilValue(userState);
-  const [notes, setNotes] = useRecoilState(notesState);
+  const { user } = useAuth();
+  const [notes, setNotes] = useState([]);
   const [newNote, setNewNote] = useState({ title: "", content: "" });
   const [loading, setLoading] = useState(false);
   const [sortOrder, setSortOrder] = useState("desc"); // "desc" for newest first, "asc" for oldest first
@@ -17,7 +17,7 @@ function NotesPage() {
 
   const fetchNotes = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/notes/${user._id}`);
+      const res = await authService.authenticatedFetch(`${API_BASE}/api/notes`);
       const data = await res.json();
       setNotes(data);
     } catch (err) {
@@ -30,11 +30,13 @@ function NotesPage() {
     if (!newNote.title.trim()) return;
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/notes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user: user._id, ...newNote }),
-      });
+      const res = await authService.authenticatedFetch(
+        `${API_BASE}/api/notes`,
+        {
+          method: "POST",
+          body: JSON.stringify(newNote),
+        }
+      );
       const note = await res.json();
       setNotes([...notes, note]);
       setNewNote({ title: "", content: "" });
@@ -46,7 +48,9 @@ function NotesPage() {
 
   const deleteNote = async (id) => {
     try {
-      await fetch(`${API_BASE}/api/notes/${id}`, { method: "DELETE" });
+      await authService.authenticatedFetch(`${API_BASE}/api/notes/${id}`, {
+        method: "DELETE",
+      });
       setNotes(notes.filter((n) => n._id !== id));
     } catch (err) {
       console.error("Error deleting note:", err);

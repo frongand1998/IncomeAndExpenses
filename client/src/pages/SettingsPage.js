@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useRecoilValue, useRecoilState } from "recoil";
-import { userState, currencyState } from "../state/atoms";
+import { useAuth } from "../contexts/AuthContext";
+import { authService } from "../utils/auth";
 
 function SettingsPage() {
-  const user = useRecoilValue(userState);
-  const [globalCurrency, setGlobalCurrency] = useRecoilState(currencyState);
+  const { user } = useAuth();
+  const [globalCurrency, setGlobalCurrency] = useState("USD");
   const [settings, setSettings] = useState({
     currency: "USD",
     currencySymbol: "$",
@@ -34,11 +34,13 @@ function SettingsPage() {
 
   const fetchSettings = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/users/${user._id}/settings`);
+      const res = await authService.authenticatedFetch(
+        `${API_BASE}/api/users/settings`
+      );
       if (res.ok) {
         const data = await res.json();
         setSettings(data);
-        setGlobalCurrency(data); // Update global Recoil state
+        setGlobalCurrency(data); // Update global currency state
       }
     } catch (err) {
       console.error("Error fetching settings:", err);
@@ -50,14 +52,16 @@ function SettingsPage() {
     setLoading(true);
     setMessage("");
     try {
-      const res = await fetch(`${API_BASE}/api/users/${user._id}/settings`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(settings),
-      });
+      const res = await authService.authenticatedFetch(
+        `${API_BASE}/api/users/settings`,
+        {
+          method: "PUT",
+          body: JSON.stringify(settings),
+        }
+      );
       if (res.ok) {
         setMessage("Settings saved successfully!");
-        // Update global Recoil state
+        // Update global currency state
         setGlobalCurrency(settings);
         // Update localStorage for immediate UI updates
         localStorage.setItem("userCurrency", JSON.stringify(settings));

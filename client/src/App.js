@@ -1,8 +1,7 @@
 import "./App.css";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import { RecoilRoot, useRecoilState } from "recoil";
-import { userState } from "./state/atoms";
 import { useState } from "react";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
 import TodoPage from "./pages/TodoPage";
 import NotesPage from "./pages/NotesPage";
@@ -13,7 +12,7 @@ import ResetPasswordPage from "./pages/ResetPasswordPage";
 import MyMap from "./pages/MyMap";
 
 function AppContent() {
-  const [user, setUser] = useRecoilState(userState);
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const toggleMobileMenu = () => {
@@ -24,10 +23,22 @@ function AppContent() {
     setIsMobileMenuOpen(false);
   };
 
+  // Show loading spinner while checking authentication
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <Router>
       <div className="min-h-screen bg-gray-50">
-        {user && (
+        {isAuthenticated && (
           <nav className="bg-white shadow-lg border-b sticky top-0 z-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between items-center h-16">
@@ -73,9 +84,12 @@ function AppContent() {
                 </div>
 
                 {/* Desktop Logout Button */}
-                <div className="hidden md:flex">
+                <div className="hidden md:flex items-center space-x-4">
+                  <span className="text-sm text-gray-600">
+                    Welcome, {user.username}
+                  </span>
                   <button
-                    onClick={() => setUser(null)}
+                    onClick={logout}
                     className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                   >
                     Logout
@@ -149,10 +163,7 @@ function AppContent() {
                     ⚙️ Settings
                   </Link>
                   <button
-                    onClick={() => {
-                      setUser(null);
-                      closeMobileMenu();
-                    }}
+                    onClick={logout}
                     className="block w-full text-left px-3 py-3 rounded-md text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50 transition-colors"
                   >
                     🚪 Logout
@@ -164,7 +175,7 @@ function AppContent() {
         )}
 
         <main className="max-w-7xl mx-auto py-4 px-4 sm:py-6 sm:px-6 lg:px-8">
-          {user ? (
+          {isAuthenticated ? (
             <Routes>
               <Route path="/todos" element={<TodoPage />} />
               <Route path="/notes" element={<NotesPage />} />
@@ -177,8 +188,7 @@ function AppContent() {
           ) : (
             <Routes>
               <Route path="/reset-password" element={<ResetPasswordPage />} />
-              <Route path="*" element={<AuthPage onAuth={setUser} />} />
-              {/* <Route path="/dev" element={<MyMap />} /> */}
+              <Route path="*" element={<AuthPage />} />
             </Routes>
           )}
         </main>
@@ -189,9 +199,9 @@ function AppContent() {
 
 function App() {
   return (
-    <RecoilRoot>
+    <AuthProvider>
       <AppContent />
-    </RecoilRoot>
+    </AuthProvider>
   );
 }
 

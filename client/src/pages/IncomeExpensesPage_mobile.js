@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useRecoilState, useRecoilValue } from "recoil";
-import { userState, incomeExpensesState } from "../state/atoms";
+import { useAuth } from "../contexts/AuthContext";
 import { useCurrency } from "../hooks/useCurrency";
 import dayjs from "dayjs";
 
 function IncomeExpensesPage() {
-  const user = useRecoilValue(userState);
-  const [records, setRecords] = useRecoilState(incomeExpensesState);
+  const { user } = useAuth();
+  const [records, setRecords] = useState([]);
   const [newRecord, setNewRecord] = useState({
     type: "income",
     amount: "",

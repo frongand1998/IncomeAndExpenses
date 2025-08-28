@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useRecoilState, useRecoilValue } from "recoil";
-import { userState, todosState } from "../state/atoms";
+import { useAuth } from "../contexts/AuthContext";
+import { authService } from "../utils/auth";
 
 function TodoPage() {
-  const user = useRecoilValue(userState);
-  const [todos, setTodos] = useRecoilState(todosState);
+  const { user } = useAuth();
+  const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -16,7 +16,7 @@ function TodoPage() {
 
   const fetchTodos = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/todos/${user._id}`);
+      const res = await authService.authenticatedFetch(`${API_BASE}/api/todos`);
       const data = await res.json();
       setTodos(data);
     } catch (err) {
@@ -29,11 +29,13 @@ function TodoPage() {
     if (!newTodo.trim()) return;
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/todos`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user: user._id, title: newTodo }),
-      });
+      const res = await authService.authenticatedFetch(
+        `${API_BASE}/api/todos`,
+        {
+          method: "POST",
+          body: JSON.stringify({ title: newTodo }),
+        }
+      );
       const todo = await res.json();
       setTodos([...todos, todo]);
       setNewTodo("");
@@ -45,11 +47,13 @@ function TodoPage() {
 
   const toggleTodo = async (id, completed) => {
     try {
-      const res = await fetch(`${API_BASE}/api/todos/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ completed: !completed }),
-      });
+      const res = await authService.authenticatedFetch(
+        `${API_BASE}/api/todos/${id}`,
+        {
+          method: "PUT",
+          body: JSON.stringify({ completed: !completed }),
+        }
+      );
       const updatedTodo = await res.json();
       setTodos(todos.map((t) => (t._id === id ? updatedTodo : t)));
     } catch (err) {
@@ -59,7 +63,9 @@ function TodoPage() {
 
   const deleteTodo = async (id) => {
     try {
-      await fetch(`${API_BASE}/api/todos/${id}`, { method: "DELETE" });
+      await authService.authenticatedFetch(`${API_BASE}/api/todos/${id}`, {
+        method: "DELETE",
+      });
       setTodos(todos.filter((t) => t._id !== id));
     } catch (err) {
       console.error("Error deleting todo:", err);

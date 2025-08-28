@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { useRecoilState, useRecoilValue } from "recoil";
-import { userState, incomeExpensesState } from "../state/atoms";
+import { useAuth } from "../contexts/AuthContext";
 import { useCurrency } from "../hooks/useCurrency";
+import { authService } from "../utils/auth";
 import dayjs from "dayjs";
 
 function IncomeExpensesPage() {
-  const user = useRecoilValue(userState);
-  const [records, setRecords] = useRecoilState(incomeExpensesState);
+  const { user } = useAuth();
+  const [records, setRecords] = useState([]);
   const [newRecord, setNewRecord] = useState({
     type: "income",
     amount: "",
@@ -258,7 +258,9 @@ function IncomeExpensesPage() {
 
   const fetchRecords = async () => {
     try {
-      const res = await fetch(`${API_BASE}/api/income-expenses/${user._id}`);
+      const res = await authService.authenticatedFetch(
+        `${API_BASE}/api/income-expenses`
+      );
       const data = await res.json();
       setRecords(data);
     } catch (err) {
@@ -281,16 +283,17 @@ function IncomeExpensesPage() {
       return;
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/income-expenses`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user: user._id,
-          ...newRecord,
-          amount: parseFloat(newRecord.amount),
-          date: newRecord.date,
-        }),
-      });
+      const res = await authService.authenticatedFetch(
+        `${API_BASE}/api/income-expenses`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            ...newRecord,
+            amount: parseFloat(newRecord.amount),
+            date: newRecord.date,
+          }),
+        }
+      );
       const record = await res.json();
       setRecords([...records, record]);
       setNewRecord({
@@ -308,9 +311,12 @@ function IncomeExpensesPage() {
 
   const deleteRecord = async (id) => {
     try {
-      await fetch(`${API_BASE}/api/income-expenses/${id}`, {
-        method: "DELETE",
-      });
+      await authService.authenticatedFetch(
+        `${API_BASE}/api/income-expenses/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
       setRecords(records.filter((r) => r._id !== id));
     } catch (err) {
       console.error("Error deleting record:", err);
@@ -348,11 +354,13 @@ function IncomeExpensesPage() {
         updateData.category = editingValue;
       }
 
-      const res = await fetch(`${API_BASE}/api/income-expenses/${recordId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updateData),
-      });
+      const res = await authService.authenticatedFetch(
+        `${API_BASE}/api/income-expenses/${recordId}`,
+        {
+          method: "PUT",
+          body: JSON.stringify(updateData),
+        }
+      );
 
       if (res.ok) {
         setRecords(
