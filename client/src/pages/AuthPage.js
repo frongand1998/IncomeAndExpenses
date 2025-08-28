@@ -39,6 +39,7 @@ function AuthPage() {
           username: form.username,
           password: form.password,
         });
+        console.log("🚀 ~ handleSubmit ~ result:", result);
       } else {
         result = await register(form);
       }
