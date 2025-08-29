@@ -86,7 +86,7 @@ function AppContent() {
                 {/* Desktop Logout Button */}
                 <div className="hidden md:flex items-center space-x-4">
                   <span className="text-sm text-gray-600">
-                    Welcome, {user.username}
+                    Welcome, {user?.username || "User"}
                   </span>
                   <button
                     onClick={logout}

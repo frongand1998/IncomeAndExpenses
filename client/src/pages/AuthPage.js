@@ -6,10 +6,12 @@ function AuthPage() {
   const {
     login,
     register,
+    user,
     error: authError,
     isLoading: authLoading,
     clearError,
   } = useAuth();
+
   const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:3000";
   const [isLogin, setIsLogin] = useState(true);
   const [isForgot, setIsForgot] = useState(false);
@@ -23,6 +25,11 @@ function AuthPage() {
     clearError();
     setError("");
   }, [isLogin, clearError]);
+
+  // Don't render if user is already logged in
+  if (user) {
+    return null; // Or redirect to dashboard
+  }
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -44,12 +51,12 @@ function AuthPage() {
         result = await register(form);
       }
 
-      if (!result.success) {
+      if (result && !result.success) {
         setError(result.error);
       }
       // If successful, the AuthProvider will handle the redirect
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "An error occurred");
     }
   };
 
@@ -107,6 +114,20 @@ function AuthPage() {
     }
   };
 
+  // Show loading state while auth is initializing
+  if (authLoading && !user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 p-8">
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
       {/* Background decoration */}
@@ -124,10 +145,16 @@ function AuthPage() {
               <span className="text-2xl">💰</span>
             </div>
             <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-              {isLogin ? "Welcome Back" : "Create Account"}
+              {isForgot
+                ? "Reset Password"
+                : isLogin
+                ? "Welcome Back"
+                : "Create Account"}
             </h1>
             <p className="text-gray-500 mt-2">
-              {isLogin
+              {isForgot
+                ? "Enter your email to reset your password"
+                : isLogin
                 ? "Sign in to your account"
                 : "Start managing your finances"}
             </p>
@@ -231,6 +258,7 @@ function AuthPage() {
             </form>
           )}
 
+          {/* Forgot Password Form */}
           {isForgot && (
             <form
               onSubmit={resetToken ? handleReset : handleForgot}
@@ -242,15 +270,20 @@ function AuthPage() {
                   <label className="text-sm font-medium text-gray-700">
                     Email
                   </label>
-                  <input
-                    name="email"
-                    type="email"
-                    placeholder="Enter your account email"
-                    value={form.email}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white/50"
-                  />
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span className="text-gray-400">📧</span>
+                    </div>
+                    <input
+                      name="email"
+                      type="email"
+                      placeholder="Enter your account email"
+                      value={form.email}
+                      onChange={handleChange}
+                      required
+                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white/50"
+                    />
+                  </div>
                   <p className="text-xs text-gray-500">
                     We'll generate a temporary reset token (normally emailed).
                   </p>
@@ -264,14 +297,19 @@ function AuthPage() {
                     <label className="text-sm font-medium text-gray-700">
                       Reset Token
                     </label>
-                    <input
-                      name="resetToken"
-                      type="text"
-                      value={resetToken}
-                      onChange={(e) => setResetToken(e.target.value)}
-                      required
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white/50"
-                    />
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span className="text-gray-400">🔑</span>
+                      </div>
+                      <input
+                        name="resetToken"
+                        type="text"
+                        value={resetToken}
+                        onChange={(e) => setResetToken(e.target.value)}
+                        required
+                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white/50"
+                      />
+                    </div>
                     <p className="text-xs text-gray-500">
                       Token expires in 15 minutes.
                     </p>
@@ -280,15 +318,20 @@ function AuthPage() {
                     <label className="text-sm font-medium text-gray-700">
                       New Password
                     </label>
-                    <input
-                      name="password"
-                      type="password"
-                      placeholder="Enter a new password"
-                      value={form.password}
-                      onChange={handleChange}
-                      required
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white/50"
-                    />
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span className="text-gray-400">🔒</span>
+                      </div>
+                      <input
+                        name="password"
+                        type="password"
+                        placeholder="Enter a new password"
+                        value={form.password}
+                        onChange={handleChange}
+                        required
+                        className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white/50"
+                      />
+                    </div>
                   </div>
                 </>
               )}
@@ -304,15 +347,18 @@ function AuthPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 px-4 rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
-                {loading
-                  ? resetToken
-                    ? "Resetting..."
-                    : "Sending..."
-                  : resetToken
-                  ? "Reset Password"
-                  : "Send Reset Link"}
+                {loading ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>{resetToken ? "Resetting..." : "Sending..."}</span>
+                  </div>
+                ) : (
+                  <span>
+                    {resetToken ? "Reset Password" : "Send Reset Link"}
+                  </span>
+                )}
               </button>
             </form>
           )}
