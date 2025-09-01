@@ -629,8 +629,8 @@ function MyMap() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="max-w-7xl mx-auto p-6 flex flex-col gap-4">
+      <div className="flex items-center justify-between ">
         <h1 className="text-3xl font-bold text-gray-900">
           🗺️ Network Device Map with Interactive Pins
         </h1>
@@ -648,8 +648,8 @@ function MyMap() {
       </div>
 
       {/* Upload Area */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">
+      <div className="flex flex-col gap-4">
+        <h2 className="text-xl font-semibold text-gray-800">
           Upload Network Diagram / Floor Plan
         </h2>
 
@@ -717,7 +717,7 @@ function MyMap() {
 
         {/* File Info */}
         {selectedImage && (
-          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className=" p-4 bg-green-50 border border-green-200 rounded-lg">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-green-800">
@@ -1366,7 +1366,7 @@ function MyMap() {
 
       {/* Real-time Status Changes Log */}
       {statusChanges.length > 0 && (
-        <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className=" bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-800">
               📊 Real-time Status Changes Log
