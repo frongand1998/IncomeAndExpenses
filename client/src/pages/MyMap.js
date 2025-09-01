@@ -18,6 +18,8 @@ function MyMap() {
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [placingDevice, setPlacingDevice] = useState(false);
+  const [devices, setDevices] = useState([]);
+  const [statusChanges, setStatusChanges] = useState([]);
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -31,9 +33,16 @@ function MyMap() {
 
   const fileInputRef = useRef(null);
   const imageRef = useRef(null);
+  const idCounterRef = useRef(0);
 
-  // Enhanced device list with locations and more details
-  const deviceList = [
+  // Generate unique ID
+  const generateUniqueId = () => {
+    idCounterRef.current += 1;
+    return `${Date.now()}-${idCounterRef.current}`;
+  };
+
+  // Enhanced device list with locations and more details - Initial static data
+  const initialDeviceList = [
     {
       id: 1,
       name: "Router A",
@@ -165,6 +174,78 @@ function MyMap() {
       lastSeen: "2025-08-25T18:20:00Z",
     },
   ];
+
+  // Initialize devices state with initial data
+  React.useEffect(() => {
+    setDevices(initialDeviceList);
+  }, []);
+
+  // Simulate real-time device status changes
+  React.useEffect(() => {
+    const statusChangeInterval = setInterval(() => {
+      setDevices((prevDevices) => {
+        return prevDevices.map((device) => {
+          // 10% chance for each device to change status every interval
+          const shouldChangeStatus = Math.random() < 0.1;
+
+          if (shouldChangeStatus) {
+            const newStatus = device.status === "online" ? "offline" : "online";
+            const newLastSeen = new Date().toISOString();
+
+            console.log(
+              `🔄 Device status changed: ${device.name} is now ${newStatus}`
+            );
+
+            // Add to status change history
+            setStatusChanges((prev) => [
+              {
+                id: generateUniqueId(),
+                deviceName: device.name,
+                deviceIcon: device.icon,
+                oldStatus: device.status,
+                newStatus: newStatus,
+                timestamp: new Date().toLocaleTimeString(),
+                fullTimestamp: newLastSeen,
+              },
+              ...prev.slice(0, 9),
+            ]); // Keep only last 10 changes
+
+            return {
+              ...device,
+              status: newStatus,
+              lastSeen: newLastSeen,
+            };
+          }
+
+          return device;
+        });
+      });
+    }, 5000); // Change status every 5 seconds
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(statusChangeInterval);
+  }, []);
+
+  // Update pins status when devices change
+  React.useEffect(() => {
+    setPins((prevPins) => {
+      return prevPins.map((pin) => {
+        if (pin.deviceId) {
+          const device = devices.find((d) => d.id === pin.deviceId);
+          if (device) {
+            return {
+              ...pin,
+              status: device.status,
+            };
+          }
+        }
+        return pin;
+      });
+    });
+  }, [devices]);
+
+  // Use dynamic devices list instead of static deviceList
+  const deviceList = devices;
 
   // Define device types and locations for filters
   const deviceTypes = [
@@ -370,7 +451,7 @@ function MyMap() {
     if (placingDevice && selectedDevice) {
       // Place the selected device
       const pin = {
-        id: Date.now(),
+        id: generateUniqueId(),
         x: Math.round(x * 100) / 100,
         y: Math.round(y * 100) / 100,
         label: selectedDevice.name,
@@ -459,7 +540,7 @@ function MyMap() {
     }
 
     const pin = {
-      id: Date.now(),
+      id: generateUniqueId(),
       x: Math.round(newPin.x * 100) / 100,
       y: Math.round(newPin.y * 100) / 100,
       label: newPin.label.trim(),
@@ -549,9 +630,22 @@ function MyMap() {
 
   return (
     <div className="max-w-7xl mx-auto p-6">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">
-        🗺️ Network Device Map with Interactive Pins
-      </h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold text-gray-900">
+          🗺️ Network Device Map with Interactive Pins
+        </h1>
+
+        {/* Real-time Status Indicator */}
+        <div className="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-lg">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          <span className="text-sm text-green-700 font-medium">
+            Live Monitoring Active
+          </span>
+          <span className="text-xs text-green-600">
+            Status updates every 5s
+          </span>
+        </div>
+      </div>
 
       {/* Upload Area */}
       <div className="mb-8">
@@ -1270,12 +1364,103 @@ function MyMap() {
         </div>
       )}
 
+      {/* Real-time Status Changes Log */}
+      {statusChanges.length > 0 && (
+        <div className="mt-8 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">
+              📊 Real-time Status Changes Log
+            </h3>
+            <button
+              onClick={() => setStatusChanges([])}
+              className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+            >
+              Clear Log
+            </button>
+          </div>
+
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {statusChanges.map((change) => (
+              <div
+                key={change.id}
+                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100"
+              >
+                <span className="text-lg">{change.deviceIcon}</span>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-gray-900">
+                      {change.deviceName}
+                    </span>
+                    <span className="text-sm text-gray-500">changed from</span>
+                    <span
+                      className={`px-2 py-1 text-xs rounded-full ${
+                        change.oldStatus === "online"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {change.oldStatus}
+                    </span>
+                    <span className="text-sm text-gray-500">to</span>
+                    <span
+                      className={`px-2 py-1 text-xs rounded-full ${
+                        change.newStatus === "online"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
+                      }`}
+                    >
+                      {change.newStatus}
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    {change.timestamp}
+                  </div>
+                </div>
+                <div
+                  className={`w-2 h-2 rounded-full ${
+                    change.newStatus === "online"
+                      ? "bg-green-400"
+                      : "bg-red-400"
+                  }`}
+                ></div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 text-xs text-gray-500 text-center">
+            Showing last {statusChanges.length} status changes • Updates every 5
+            seconds
+          </div>
+        </div>
+      )}
+
       {/* Instructions */}
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
         <h3 className="text-lg font-semibold text-blue-900 mb-3">
-          💡 How to Use Network Device Map with Filters
+          💡 How to Use Network Device Map with Real-time Monitoring
         </h3>
         <ul className="space-y-2 text-blue-800">
+          <li className="flex items-start gap-2">
+            <span className="text-blue-600">•</span>
+            <span>
+              <strong>Real-time monitoring</strong> automatically simulates
+              device status changes every 5 seconds
+            </span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-blue-600">•</span>
+            <span>
+              <strong>Status indicators</strong> show green for online devices
+              and red for offline devices
+            </span>
+          </li>
+          <li className="flex items-start gap-2">
+            <span className="text-blue-600">•</span>
+            <span>
+              <strong>Live status log</strong> tracks all device status changes
+              with timestamps
+            </span>
+          </li>
           <li className="flex items-start gap-2">
             <span className="text-blue-600">•</span>
             <span>
